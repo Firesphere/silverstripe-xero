@@ -37,10 +37,7 @@ trait XeroOrderTrait
         $invoice->setDueDate($order->getXeroDueDate());
         $invoice->setLineAmountTypes(LineAmountTypes::INCLUSIVE);
 
-        $items = [];
-        foreach ($order->OrderItems() as $orderItem) {
-            $items[] = $this->createItem($orderItem);
-        }
+        $items = $order->getXeroLineItems();
         $invoice->setLineItems($items);
 
         try {

@@ -60,7 +60,7 @@ trait XeroContactTrait
         $result = $result[0];
         if ($result->getHasValidationErrors()) {
             XeroDebugLog::logXero([
-                'Message'  => 'Could not save Xero contact:' . $result->getValidationErrors()[0]->getMessage(),
+                'Message'  => 'Could not save Xero contact: ' . $result->getValidationErrors()[0]->getMessage(),
                 'Level'    => 'ERROR',
                 'OrderID'  => $order->ID,
                 'ClientID' => $localClient->ID

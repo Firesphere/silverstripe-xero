@@ -67,23 +67,15 @@ class Order extends DataObject
             $phones[] = $p;
         }
         $contact->setPhones($phones);
-        $hasAddress = ($this->DeliveryAddress || ($client->exists() && $client->PostalAddressStreet));
-        if ($hasAddress) {
-            $address = new Address();
-            $address->setAddressLine1(
-                $client->exists() ? $client->PostalAddressStreet : $this->DeliveryAddress
-            );
-            $address->setAddressLine2(
-                $client->exists() ? $client->PostalAddressSuburb : $this->Suburb
-            );
-            $address->setCity(
-                $client->exists() ? $client->PostalAddressCity : $this->City
-            );
-            $address->setPostalCode(
-                $client->exists() ? $client->PostalAddressPostCode : $this->PostCode
-            );
-            $contact->setAddresses([$address]);
-        }
+        $addresses = [];
+        // Repeat new address as needed
+        $address = new Address();
+        $address->setAddressLine1($this->DeliveryAddress);
+        $address->setAddressLine2($this->Suburb);
+        $address->setCity($this->City);
+        $address->setPostalCode($this->PostCode);
+        $addresses[] = $address;
+        $contact->setAddresses($address);
         return $contact;
     }
 }
@@ -93,7 +85,27 @@ For orders, your Order object also needs the following methods:
 
 - `getXeroOrderNumber` to return the Order Number as it should be displayed in Xero
 - `getXeroDueDate` the date on which the invoice is due, formatted as YYYY-mm-dd (e.g. 2023-01-05)
-- `getLineItems` The items to put in to this invoice
+- `getXeroLineItems` The items to put in to this invoice
+
+Example LineItems:
+
+```php
+    public function getXeroLineItems($order)
+    {
+        $items = [];
+        foreach ($order->Items as $lineItem) {
+            $item = new XeroAPI\XeroPHP\Models\Accounting\LineItem();
+            $item->setDescription($lineItem->ProductName);
+            $item->setQuantity($lineItem->Quantity);
+            $item->setUnitAmount($lineItem->Price);
+            $item->setLineAmount($lineItem->Quantity * $lineItem->Price);
+            $item->setAccountCode($lineItem->AccountCode);
+            $item->setTaxType(TaxType::OUTPUT2);
+            $items[] = $item;
+        }
+        return $items;
+    }
+```
 
 
 
