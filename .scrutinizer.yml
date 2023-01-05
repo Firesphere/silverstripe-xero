@@ -1,0 +1,19 @@
+checks:
+  php: true
+
+build:
+  environment:
+    node: 12.14.0
+  nodes:
+    analysis:
+      tests:
+        override: [php-scrutinizer-run]
+      cache:
+        directories:
+          - vendor/
+filter:
+  paths: ["src/*"]
+
+tools:
+  external_code_coverage:
+    timeout: 1200
