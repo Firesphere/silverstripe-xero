@@ -43,6 +43,9 @@ a Xero contact.
 An example of a Xero contact:
 
 ```php
+
+use \XeroAPI\XeroPHP\Models\Accounting\Phone;
+use \XeroAPI\XeroPHP\Models\Accounting\Address;
 class Order extends DataObject
 {
     public function getContactForXero()
@@ -106,6 +109,10 @@ Example LineItems:
         return $items;
     }
 ```
+
+### Why create your own contact and order etc.?
+
+Because everyone might implement things differently, thus I can't enforce a standard.
 
 
 

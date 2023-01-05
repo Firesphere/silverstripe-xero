@@ -41,8 +41,9 @@ trait XeroOrderTrait
         $invoice->setLineItems($items);
 
         try {
+            $invoices = new Invoices(['invoices' => [$invoice]]);
             /** @var Invoice $result */
-            $result = $accountingAPI->createInvoices($tenant->XeroID, new Invoices([$invoice]));
+            $result = $accountingAPI->createInvoices($tenant->XeroID, $invoices);
         } catch (Exception $e) {
             XeroDebugLog::logXero([
                 'Message' => 'Could not save Xero invoice: ' . $e->getMessage(),
@@ -53,7 +54,18 @@ trait XeroOrderTrait
             return false;
         }
 
-        $order->XeroInvoiceID = $result->getInvoiceID();
+        if ($result[0]->getValidationErrors()) {
+            XeroDebugLog::logXero([
+                'Message' => 'Error creating Xero invoice: ' . $result[0]->getValidationErrors()[0]->getMessage(),
+                'Level'   => 'ERROR',
+                'OrderID' => $order->ID,
+            ]);
+
+            return false;
+        }
+
+        // We're creating a single invoice at the time, so we only get one back
+        $order->XeroInvoiceID = $result[0]->getInvoiceID();
 
         return $invoice;
     }

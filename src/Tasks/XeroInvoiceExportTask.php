@@ -7,7 +7,8 @@ use Firesphere\Xero\Services\ProviderFactory;
 use Firesphere\Xero\Services\XeroConfig;
 use Firesphere\Xero\Traits\XeroContactTrait;
 use Firesphere\Xero\Traits\XeroOrderTrait;
-use Firesphere\Xero\Traits\XeroTrait;
+use Firesphere\Xero\Traits\XeroShadowTrait;
+use Firesphere\Xero\Traits\XeroCredentialsTrait;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
 use SilverStripe\Control\Director;
@@ -23,9 +24,10 @@ use XeroAPI\XeroPHP\Models\Accounting\Contact;
  */
 class XeroInvoiceExportTask extends BuildTask
 {
-    use XeroTrait;
+    use XeroCredentialsTrait;
     use XeroContactTrait;
     use XeroOrderTrait;
+    use XeroShadowTrait;
 
     /**
      * @var string
@@ -36,6 +38,20 @@ class XeroInvoiceExportTask extends BuildTask
      * @var GenericProvider
      */
     protected $xero;
+
+    /**
+     * @var bool|mixed
+     */
+    protected $shadowCopy = false;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->shadowCopy = XeroConfig::getShadowCopy();
+        // The accounting API is a weird one that's somehow not included in things
+        require_once Director::getAbsFile('vendor/xeroapi/xero-php-oauth2/lib/Api/AccountingApi.php');
+
+    }
 
     /**
      * @param GenericProvider $application
@@ -69,8 +85,6 @@ class XeroInvoiceExportTask extends BuildTask
     public function run($request)
     {
         XeroDebugLog::logXero(['Message' => 'Starting new run', 'Level' => 'INFO']);
-        // The accounting API is a weird one that's somehow not included in things
-        require_once Director::baseFolder() . '/vendor/xeroapi/xero-php-oauth2/lib/Api/AccountingApi.php';
 
         $this->refreshCredentials();
         XeroDebugLog::logXero(['Message' => 'New tokens acquired from Xero', 'Level' => 'INFO']);
@@ -89,7 +103,15 @@ class XeroInvoiceExportTask extends BuildTask
             if (!$contact instanceof Contact) {
                 continue;
             }
-            $xeroOrder = $this->createXeroInvoice($contact, $order, $this->tenant, $accountingAPI);
+            $invoice = $this->createXeroInvoice($contact, $order, $this->tenant, $accountingAPI);
+
+            if ($this->shadowCopy) {
+                $copy = $this->copyContact($contact, $this->tenant->ID);
+                $original = $order->Client();
+                $original->CopyContactID = $copy;
+                $original->write();
+                // @todo: Do the same for invoices
+            }
         }
     }
 }

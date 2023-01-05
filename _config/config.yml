@@ -1,2 +1,3 @@
 Firesphere\Xero\Services\XeroConfig:
   Currency: 'NZD'
+  ShadowCopy: true

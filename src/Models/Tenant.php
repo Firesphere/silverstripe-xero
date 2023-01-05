@@ -2,6 +2,7 @@
 
 namespace Firesphere\Xero\Models;
 
+use Firesphere\Xero\Models\Xero\Contact;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ManyManyList;
 use SilverStripe\SiteConfig\SiteConfig;
@@ -14,6 +15,7 @@ use SilverStripe\SiteConfig\SiteConfig;
  * @property string $XeroID
  * @property int $CredentialsID
  * @method Credentials Credentials()
+ * @method DataList|Contact[] XeroContacts()
  * @method ManyManyList|ScopeCategory[] TenantScopes()
  */
 class Tenant extends DataObject
@@ -32,6 +34,10 @@ class Tenant extends DataObject
 
     private static $has_one = [
         'Credentials' => Credentials::class
+    ];
+
+    private static $has_many = [
+        'XeroContacts' => Contact::class,
     ];
 
     private static $many_many = [
@@ -72,6 +78,7 @@ class Tenant extends DataObject
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
+        $fields->removeByName(['CredentialsID']);
         $fields->dataFieldByName('XeroID')->setReadonly(true)->setDisabled(true);
         $fields->dataFieldByName('XeroName')->setReadonly(true)->setDisabled(true);
         $fields->dataFieldByName('TenantScopes')->setDescription('If the scopes are changed, a new authentication process needs to be started.');

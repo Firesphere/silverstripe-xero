@@ -5,6 +5,7 @@ namespace Firesphere\Xero\Traits;
 use Exception;
 use Firesphere\Xero\Models\Tenant;
 use Firesphere\Xero\Models\XeroDebugLog;
+use Firesphere\Xero\Services\XeroConfig;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ValidationException;
 use XeroAPI\XeroPHP\Api\AccountingApi;
@@ -18,7 +19,7 @@ trait XeroContactTrait
      * @param Contact $client To avoid ambiguation between Xero Contact and local generated, it's named "$client"
      * @param Tenant $tenant
      * @param AccountingApi $accountingAPI
-     * @return false|void
+     * @return false|Contact
      * @throws ValidationException
      */
     public function getXeroContact($order, $client, $tenant, $accountingAPI)
@@ -28,13 +29,15 @@ trait XeroContactTrait
         $localClient = $order->Client();
 
         if ($contact !== false) {
+            $contact = $contact[0];
             $localClient->XeroContactID = $contact->getContactId();
             $localClient->write();
+
             return $contact;
         }
 
         XeroDebugLog::logXero([
-            'Message'  => sprintf('Creating contact %d in Xero', $localClient->ID),
+            'Message'  => sprintf('Creating contact with ID %d in Xero', $localClient->ID),
             'Level'    => 'INFO',
             'ClientID' => $localClient->ID,
             'OrderID'  => $order->ID,
@@ -83,6 +86,10 @@ trait XeroContactTrait
             return false;
         }
 
+        if (XeroConfig::getShadowCopy()) {
+            $this->copyContact($result);
+        }
+
         return $result;
     }
 
@@ -91,7 +98,7 @@ trait XeroContactTrait
      * @param Contact $client
      * @param Tenant $tenant
      * @param AccountingApi $accountingAPI
-     * @return false|mixed
+     * @return false|Contact
      */
     protected function getContactFromXero($order, $client, $tenant, $accountingAPI)
     {

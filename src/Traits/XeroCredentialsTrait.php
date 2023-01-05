@@ -10,7 +10,7 @@ use SilverStripe\SiteConfig\SiteConfig;
 /**
  *
  */
-trait XeroTrait
+trait XeroCredentialsTrait
 {
     /**
      * @var Tenant

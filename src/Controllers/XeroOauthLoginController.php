@@ -4,7 +4,7 @@ namespace Firesphere\Xero\Controllers;
 
 use Firesphere\Xero\Models\XeroDebugLog;
 use Firesphere\Xero\Services\ProviderFactory;
-use Firesphere\Xero\Traits\XeroTrait;
+use Firesphere\Xero\Traits\XeroCredentialsTrait;
 use GuzzleHttp\Client;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
@@ -28,7 +28,7 @@ use XeroAPI\XeroPHP\Configuration;
  */
 class XeroOauthLoginController extends Controller
 {
-    use XeroTrait;
+    use XeroCredentialsTrait;
 
     /**
      * @var string[]

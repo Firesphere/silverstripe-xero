@@ -40,6 +40,9 @@ class Credentials extends DataObject
         if (!$credentialsObject) {
             $credentialsObject = self::create();
             $credentialsObject->write();
+            if ($forTenant) {
+                $credentialsObject->Tenants()->add($forTenant);
+            }
         }
 
         return $credentialsObject;
